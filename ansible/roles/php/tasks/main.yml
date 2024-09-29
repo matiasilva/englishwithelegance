@@ -1,0 +1,19 @@
+---
+- name: Install PHP
+  ansible.builtin.include_role:
+    name: geerlingguy.php
+  vars:
+    php_source_configure_command: '--enable-fpm'
+    php_enable_php_fpm: true
+    php_packages_extra:
+      - php-devel
+      - php-pdo
+      - php-pecl-apcu
+      - php-bcmath
+      - php-igbinary
+      - php-imagick
+      - php-mysql
+      - php-redis
+      - php-soap
+      - php-xmlrpc
+      - php-zip

@@ -1,0 +1,12 @@
+---
+- hosts: webservers
+  user: pi
+  become: yes
+  roles: 
+    - common
+    - ufw
+    - nginx
+    - php
+    - mysql
+    - wp-cli
+    - ssh

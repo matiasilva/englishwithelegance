@@ -1,0 +1,40 @@
+- hosts: webservers
+  become: yes
+  tasks:
+    - name: Allow everything and enable UFW
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Set logging
+      ufw:
+        logging: on
+
+    - name: Log rejected connections
+      ufw:
+        rule: reject
+        port: auth
+        log: yes
+
+    - name: Enable SSH
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Rate limit SSH
+      ufw:
+        rule: limit
+        port: ssh
+        proto: tcp
+
+    - name: Enable HTTP/HTTPS
+      ufw:
+        rule: allow
+        port: 80
+        proto: tcp
+
+    - name: Enable HTTP/HTTPS
+      ufw:
+        rule: allow
+        port: 443
+        proto: tcp
