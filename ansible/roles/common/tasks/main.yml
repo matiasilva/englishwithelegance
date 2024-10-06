@@ -13,5 +13,9 @@
       - curl
       - git-core
       - at
+      - ufw
+      - ghostscript
+      - imagemagick
+      - openssl
     state: present
     update_cache: yes

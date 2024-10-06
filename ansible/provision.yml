@@ -1,12 +1,91 @@
 ---
 - hosts: webservers
-  user: pi
+  user: matias
   become: yes
+  vars_files:
+    - vault.yml
   roles: 
     - common
     - ufw
     - nginx
-    - php
-    - mysql
+    - role: geerlingguy.php
+      vars:
+        php_source_configure_command: '--enable-fpm'
+        php_enable_php_fpm: true
+        php_webserver_daemon: nginx
+        php_fpm_pool_user: nginx
+        php_fpm_pool_group: nginx
+        php_fpm_pools:
+          - pool_name: www
+            pool_template: www.conf.j2
+            pool_listen: "/run/php/php-cgi.sock" # keep this sync'ed to wordpress.conf
+            pool_listen_allowed_clients: "127.0.0.1"
+            pool_pm: dynamic
+            pool_pm_max_children: 50
+            pool_pm_start_servers: 5
+            pool_pm_min_spare_servers: 5
+            pool_pm_max_spare_servers: 5
+            pool_pm_max_requests: 0
+            pool_pm_status_path: ""
+        php_packages_extra:
+          - php-dom
+          - php-exif
+          - php-fileinfo
+          - php-igbinary
+          - php-imagick
+          - php-intl
+          - php-zip
+          - php-pdo
+          - php-bcmath
+          - php-memcached
+          - php-mysql
+          - php-redis
+          - php-soap
+          - php-xmlrpc
+          - php-xmlreader
+          - php-simplexml
+          - php-shmop
+    - role: geerlingguy.mysql
+      vars:
+        mysql_databases:
+        - name: wordpress
+        mysql_users:
+          - name: wordpress
+            password: "{{ vault_wp_db_password }}"
+            priv: "wordpress.*:ALL"
+        mysql_root_password: "{{ vault_mysql_root_password }}"
+        mysql_user_password: "{{ vault_mysql_user_password }}"
+        mysql_packages:
+          - mariadb-client
+          - mariadb-server
+          - python3-mysqldb
     - wp-cli
     - ssh
+    - role: ddns
+      vars:
+        script_dir: /opt/cloudflare-ddns
+        script_name: cloudflare_ddns_updater.py
+        cron_identifier: "cloudflare_ddns_update"
+    - role: wordpress
+      vars:
+        wp_version: 6.6.2
+        wp_install_dir: "/var/www/wordpress"
+        mysql_root_password: "{{ vault_mysql_root_password }}"
+        wp_db_name: "wordpress"
+        wp_db_user: "wordpress"
+        wp_db_password: "{{ vault_wp_db_password }}"
+        wp_db_host: "localhost"
+        server_name: "englishwithelegance.com"
+    - role: geerlingguy.certbot
+      vars:
+        certbot_admin_email: alison@englishwithelegance.com
+        certbot_auto_renew_user: nginx
+        certbot_create_extra_args: '' 
+        certbot_create_if_missing: true
+        certbot_certs:
+          - domains:
+              - englishwithelegance.com
+              - www.englishwithelegance.com
+
+
+

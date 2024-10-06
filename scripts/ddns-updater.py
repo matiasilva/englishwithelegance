@@ -1,6 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
+import syslog
 
 # Load environment variables from .env file
 load_dotenv()
@@ -10,6 +11,11 @@ ZONE_ID = os.getenv('CLOUDFLARE_ZONE_ID')
 API_TOKEN = os.getenv('CLOUDFLARE_API_TOKEN')
 RECORD_NAME = os.getenv('CLOUDFLARE_RECORD_NAME')
 
+def log_message(message):
+    msg = f"CloudflareDDNS: {message}"
+    print(msg)
+    syslog.syslog(syslog.LOG_INFO, msg)
+
 def get_public_ip():
     """Get the current public IP address."""
     response = requests.get('https://api.ipify.org')
@@ -18,7 +24,7 @@ def get_public_ip():
 def update_dns_record(ip):
     """Update the DNS record in Cloudflare."""
     url = f"https://api.cloudflare.com/client/v4/zones/{ZONE_ID}/dns_records"
-    
+
     headers = {
         "Authorization": f"Bearer {API_TOKEN}",
         "Content-Type": "application/json"
@@ -52,10 +58,10 @@ def update_dns_record(ip):
     response = requests.put(update_url, headers=headers, json=data)
     
     if response.status_code == 200:
-        print(f"Successfully updated IP to {ip}")
+        log_message(f"Successfully updated IP to {ip}")
     else:
-        print(f"Failed to update IP. Status code: {response.status_code}")
-        print(response.text)
+        log_message(f"Failed to update IP. Status code: {response.status_code}")
+        log_message(response.text)
 
 if __name__ == "__main__":
     current_ip = get_public_ip()
